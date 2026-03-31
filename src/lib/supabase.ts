@@ -1,12 +1,9 @@
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { createClient } from "@supabase/supabase-js";
 
-type MinimalAuthClient = Pick<
-  SupabaseClient,
-  "auth"
-> & {
+type SupabaseLike = {
   auth: {
     signInWithPassword: (credentials: { email: string; password: string }) => Promise<{
-      data: null;
+      data: { user: null; session: null; weakPassword?: null };
       error: { message: string } | null;
     }>;
     signUp: (credentials: {
@@ -14,7 +11,7 @@ type MinimalAuthClient = Pick<
       password: string;
       options?: Record<string, unknown>;
     }) => Promise<{
-      data: { user: null };
+      data: { user: null; session: null };
       error: { message: string } | null;
     }>;
     signOut: () => Promise<{ error: { message: string } | null }>;
@@ -30,23 +27,23 @@ if (!supabaseUrl || !supabaseAnonKey) {
   );
 }
 
-const mockSupabase: MinimalAuthClient = {
+const mockSupabase: SupabaseLike = {
   auth: {
     async signInWithPassword() {
       return {
-        data: null,
+        data: { user: null, session: null },
         error: { message: "Supabase credentials are missing." },
       };
     },
     async signUp() {
       return {
-        data: { user: null },
+        data: { user: null, session: null },
         error: { message: "Supabase credentials are missing." },
       };
     },
     async signOut() {
       return {
-        error: { message: null },
+        error: null,
       };
     },
   },
@@ -56,4 +53,4 @@ export const supabase = (
   supabaseUrl && supabaseAnonKey
     ? createClient(supabaseUrl, supabaseAnonKey)
     : mockSupabase
-) as MinimalAuthClient;
+) as SupabaseLike;

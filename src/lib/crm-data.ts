@@ -4,6 +4,7 @@ export type LeadStatus =
   | "INTERESTED"
   | "VIEWING"
   | "NEGOTIATING"
+  | "CANCELLED"
   | "SOLD";
 
 export type LeadScore = "HOT" | "WARM" | "COLD";
@@ -266,6 +267,7 @@ export const leadPipeline: LeadStatus[] = [
   "INTERESTED",
   "VIEWING",
   "NEGOTIATING",
+  "CANCELLED",
   "SOLD",
 ];
 
@@ -280,6 +282,7 @@ export function getLeadNextAction(lead: Lead) {
     INTERESTED: "اقتراح زيارتين للمعاينة",
     VIEWING: "جمع ملاحظات العميل بعد المعاينة",
     NEGOTIATING: "إرسال العرض النهائي وتثبيت الحجز",
+    CANCELLED: "مراجعة سبب الإلغاء وإعادة التأهيل لاحقاً",
     SOLD: "متابعة ما بعد البيع والتسليم",
   };
 
@@ -294,6 +297,7 @@ export function getLeadPriorityWeight(lead: Lead) {
     INTERESTED: 4,
     VIEWING: 5,
     NEGOTIATING: 6,
+    CANCELLED: 1,
     SOLD: 1,
   };
 
@@ -388,6 +392,7 @@ function getPipelineLabel(status: LeadStatus) {
     INTERESTED: "مهتم",
     VIEWING: "معاينة",
     NEGOTIATING: "تفاوض",
+    CANCELLED: "ملغي",
     SOLD: "مغلقة",
   };
 

@@ -2,12 +2,11 @@
 
 import { 
   BarChart, 
-  Bar, 
+  Bar,
   XAxis, 
   YAxis, 
   CartesianGrid, 
   Tooltip, 
-  ResponsiveContainer, 
   PieChart, 
   Pie, 
   Cell 
@@ -57,8 +56,8 @@ export default function AnalyticsPage() {
             </div>
           </div>
           <div style={{ height: '350px', width: '100%' }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={barData}>
+            <div style={{ width: '100%', overflowX: 'auto' }}>
+              <BarChart width={620} height={320} data={barData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
                 <XAxis dataKey="name" stroke="var(--muted)" fontSize={12} tickLine={false} axisLine={false} />
                 <YAxis stroke="var(--muted)" fontSize={12} tickLine={false} axisLine={false} />
@@ -68,7 +67,7 @@ export default function AnalyticsPage() {
                 />
                 <Bar dataKey="sales" fill="var(--primary)" radius={[4, 4, 0, 0]} />
               </BarChart>
-            </ResponsiveContainer>
+            </div>
           </div>
         </div>
 
@@ -76,8 +75,8 @@ export default function AnalyticsPage() {
         <div className="glass-card" style={{ padding: '32px' }}>
           <h2 style={{ fontSize: '1.25rem', marginBottom: '24px' }}>مصادر العملاء</h2>
           <div style={{ height: '240px', width: '100%' }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
+            <div style={{ width: '100%', overflowX: 'auto' }}>
+              <PieChart width={320} height={240}>
                 <Pie
                   data={pieData}
                   cx="50%"
@@ -93,7 +92,7 @@ export default function AnalyticsPage() {
                 </Pie>
                 <Tooltip />
               </PieChart>
-            </ResponsiveContainer>
+            </div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '24px' }}>
             {pieData.map((item, index) => (

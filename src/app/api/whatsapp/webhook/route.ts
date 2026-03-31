@@ -1,32 +1,6 @@
 import { NextResponse } from "next/server";
 import { generateAIResponse } from "@/lib/ai";
-import { leads as seedLeads, properties } from "@/lib/crm-data";
-import type { Lead } from "@/lib/crm-data";
-
-type StoredMessage = {
-  leadId: string;
-  content: string;
-  isIncoming: boolean;
-  createdAt: string;
-};
-
-type Store = {
-  leads: Lead[];
-  messages: StoredMessage[];
-};
-
-const globalStore = globalThis as typeof globalThis & { crmStore?: Store };
-
-function getStore() {
-  if (!globalStore.crmStore) {
-    globalStore.crmStore = {
-      leads: [...seedLeads],
-      messages: [],
-    };
-  }
-
-  return globalStore.crmStore;
-}
+import { appendMessage, listProperties, updateLead, upsertWhatsAppLead } from "@/lib/crm-service";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -51,55 +25,40 @@ export async function POST(request: Request) {
     body.entry?.[0]?.changes?.[0]?.value?.messages
   ) {
     const msg = body.entry[0].changes[0].value.messages[0];
-    const from = msg.from as string;
-    const text = msg.text?.body as string | undefined;
+    const from = String(msg.from || "");
+    const text = String(msg.text?.body || "").trim();
 
-    if (!text) {
+    if (!from || !text) {
       return NextResponse.json({ status: "ignored" });
     }
 
-    console.log(`Received message from ${from}: ${text}`);
-
     try {
-      const store = getStore();
-      let lead = store.leads.find((item) => item.phone === from);
+      const lead = await upsertWhatsAppLead(from);
+      const properties = await listProperties();
+      const aiResponse = await generateAIResponse(
+        text,
+        properties.map((property) => ({
+          id: property.id,
+          name: property.name,
+          location: property.location,
+          price: property.price,
+          area: property.area,
+        }))
+      );
 
-      if (!lead) {
-        lead = {
-          id: `lead-${Date.now()}`,
-          phone: from,
-          name: "WhatsApp Contact",
-          status: "NEW",
-          score: "COLD",
-          source: "WHATSAPP",
-          budget: 0,
-          preferredLocation: "Unknown",
-          lastTouch: new Date().toISOString(),
-          nextFollowUp: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
-          notesCount: 0,
-          messagesCount: 0,
-        };
-
-        store.leads.push(lead);
-      }
-
-      const aiResponse = await generateAIResponse(text, properties);
-
-      store.messages.push({
-        leadId: lead.id,
+      await appendMessage(lead.id, {
         content: text,
         isIncoming: true,
-        createdAt: new Date().toISOString(),
       });
 
-      lead.score = aiResponse.score ?? lead.score;
-      lead.lastTouch = new Date().toISOString();
-      lead.messagesCount += 1;
+      if (aiResponse.score) {
+        await updateLead(lead.id, { score: aiResponse.score });
+      }
 
       return NextResponse.json({
         status: "success",
         leadId: lead.id,
-        score: lead.score,
+        score: aiResponse.score,
         suggestion: aiResponse.text,
       });
     } catch (error) {
