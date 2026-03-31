@@ -1,0 +1,24 @@
+.shell {
+  display: flex;
+  min-height: 100vh;
+  direction: rtl;
+}
+
+.main {
+  flex: 1;
+  margin-right: 280px;
+  padding: 32px;
+  background: var(--background);
+  min-height: 100vh;
+}
+
+.content {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+@media (max-width: 1024px) {
+  .main {
+    margin-right: 80px;
+  }
+}

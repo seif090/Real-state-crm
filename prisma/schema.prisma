@@ -1,0 +1,127 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  SUPER_ADMIN
+  COMPANY_ADMIN
+  SALES_AGENT
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  INTERESTED
+  VIEWING
+  NEGOTIATING
+  SOLD
+  CANCELLED
+}
+
+enum PropertyStatus {
+  AVAILABLE
+  RESERVED
+  SOLD
+}
+
+model Company {
+  id          String   @id @default(cuid())
+  name        String
+  logoUrl     String?
+  plan        String   @default("BASIC") // BASIC, PRO, ENTERPRISE
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  users       User[]
+  leads       Lead[]
+  properties  Property[]
+}
+
+model User {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  name        String?
+  role        Role     @default(SALES_AGENT)
+  companyId   String
+  company     Company  @relation(fields: [companyId], references: [id])
+  
+  assignedLeads Lead[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Property {
+  id          String         @id @default(cuid())
+  companyId   String
+  company     Company        @relation(fields: [companyId], references: [id])
+  
+  name        String
+  location    String
+  type        String         // Apartment, Villa, Office, etc.
+  price       Float
+  area        Float
+  bedrooms    Int?
+  bathrooms   Int?
+  description String?
+  images      String[]       // URLs
+  status      PropertyStatus @default(AVAILABLE)
+  
+  leads       Lead[]         // Leads interested in this property
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum LeadScore {
+  HOT
+  WARM
+  COLD
+}
+
+model Lead {
+  id           String     @id @default(cuid())
+  companyId    String
+  company      Company    @relation(fields: [companyId], references: [id])
+  
+  phone        String?    // WhatsApp number
+  name         String?
+  email        String?
+  status       LeadStatus @default(NEW)
+  score        LeadScore? @default(COLD)
+  source       String     @default("WHATS_APP") // WHATS_APP, MANUAL, WEB_SITE
+  
+  budget       Float?
+  preferredLocation String?
+  
+  agentId      String?
+  agent        User?      @relation(fields: [agentId], references: [id])
+  
+  propertyId   String?
+  property     Property?  @relation(fields: [propertyId], references: [id])
+  
+  notes        Note[]
+  messages     Message[]
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Note {
+  id        String   @id @default(cuid())
+  content   String
+  leadId    String
+  lead      Lead     @relation(fields: [leadId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  leadId    String
+  lead      Lead     @relation(fields: [leadId], references: [id])
+  content   String
+  isIncoming Boolean
+  createdAt DateTime @default(now())
+}
